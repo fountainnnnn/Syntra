@@ -5,6 +5,11 @@ build/
 coverage/
 playwright-report/
 test-results/
+artifacts/playwright/
+artifacts/playwright-report/
+artifacts/screenshots/
+artifacts/*.json
+artifacts/*.xml
 
 .env
 .env.*
@@ -14,6 +19,7 @@ test-results/
 data/*.db
 data/*.db-shm
 data/*.db-wal
+data/*.json
 
 *.log
 *.tsbuildinfo

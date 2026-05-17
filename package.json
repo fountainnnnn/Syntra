@@ -4,14 +4,58 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "wait:env": "tsx scripts/wait-for-env.ts"
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "server": "tsx watch server/index.ts",
+    "bot": "tsx scripts/telegram-bot.ts",
+    "dev:all": "concurrently -k -n frontend,server,bot -c blue,green,magenta \"npm run dev\" \"npm run server\" \"npm run bot\"",
+    "build": "tsc --noEmit && vite build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "wait:env": "tsx scripts/wait-for-env.ts",
+    "seed": "tsx scripts/seed.ts",
+    "sweep:endpoints": "tsx scripts/endpoint-sweep.ts",
+    "verify:openai": "tsx scripts/verify-openai.ts",
+    "verify:telegram": "tsx scripts/verify-telegram.ts",
+    "verify:real-apis": "tsx scripts/verify-real-apis.ts",
+    "design:lint": "design.md lint DESIGN.md",
+    "design:spec": "design.md spec",
+    "design:export": "design.md export --format json-tailwind DESIGN.md"
   },
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.16.0",
+    "openai": "^6.38.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.1",
+    "recharts": "^3.8.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
+    "@eslint/js": "^10.0.1",
+    "@google/design.md": "^0.1.1",
+    "@playwright/test": "^1.60.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "eslint": "^10.4.0",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.3.0",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.3",
+    "vite": "^8.0.13",
+    "vitest": "^4.1.6"
   }
 }

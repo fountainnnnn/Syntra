@@ -129,7 +129,7 @@ Latest verified local run:
 - `npm run test`: pass.
 - `npm run sweep:endpoints`: pass.
 - `npm run verify:real-apis`: pass with real OpenAI and Telegram checks.
-- `npm run test:e2e`: pass, 36/36 tests across desktop, tablet, and mobile.
+- `npm run test:e2e`: pass, 57/57 tests across desktop, tablet, and mobile.
 
 ## Backup Demo Injection
 

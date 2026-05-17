@@ -203,3 +203,7 @@ Playwright report output:
 - `logo.png` is used in the sidebar brand mark and represented in `DESIGN.md` as the canonical Syntra logo asset.
 - Pipeline desktop screenshots inspected at 1440px and 2048px-wide viewports: compact lanes, no double vertical board scrollbar, visible lead detail actions, and horizontal rail behavior preserved.
 - Final checks passed: `npm run build`, `npm run lint`, `npm run test`, `npm run design:lint`, `npm run design:spec`, `npm run design:export`, and `npm run test:e2e` (57/57).
+
+## README Documentation QA - 2026-05-17
+- Replaced the top-level README with a complete project guide and kept `DEMO_README.md` aligned with the current 57/57 Playwright suite.
+- Checks passed: `git diff --check`, `npm run lint`, `npm run test`, and linked-doc existence checks.

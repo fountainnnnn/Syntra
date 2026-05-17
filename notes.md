@@ -248,3 +248,9 @@
 ## Real API Verification - 2026-05-17T08:28:14.678Z
 - OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
 - Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## README Documentation Refresh - 2026-05-17
+- User asked for a proper README and requested commit/push.
+- Replaced the short top-level `README.md` with a full project guide covering product purpose, pages, Telegram/OpenAI behavior, setup, run commands, demo flow, scripts, API endpoints, verification, project structure, design system, and security notes.
+- Updated `DEMO_README.md` so the latest Playwright count matches the current suite: 57/57.
+- Verification passed: `git diff --check`, `npm run lint`, `npm run test`, and linked-doc existence checks.

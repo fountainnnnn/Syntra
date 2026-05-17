@@ -79,7 +79,7 @@ Recommended demo message:
 Hi, I booked a corporate event package last week but no one replied with the invoice. We need confirmation today or we'll find another vendor.
 ```
 
-Expected behavior: the backend processes the inbound message through the same pipeline as demo injection, updates the dashboard snapshot, and records source evidence. If `TELEGRAM_ENABLE_OUTBOUND_REPLIES=true`, the bot sends at most one controlled test acknowledgement while running.
+Expected behavior: the backend processes the inbound message through the same pipeline as demo injection, updates the dashboard snapshot, and records source evidence. The bot worker does not send automatic acknowledgements; Telegram outbound messages are sent only when an operator uses the dashboard reply action.
 
 ## OpenAI Setup
 

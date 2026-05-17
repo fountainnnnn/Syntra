@@ -133,11 +133,15 @@ export function registerRoutes(app: Express): void {
       const conversation = state.conversations.find((item) => item.id === req.body?.conversationId);
       const customer = conversation ? state.customers.find((item) => item.id === conversation.customerId) : undefined;
       const chatId = req.body?.chatId ?? customer?.telegramChatId;
+      const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+      if (!text) {
+        res.status(400).json({ error: { code: "missing_reply_text", message: "Dashboard reply text is required before Telegram can send a message." } });
+        return;
+      }
       if (!chatId) {
         res.status(422).json({ error: { code: "missing_chat_id", message: "No Telegram chat id is linked to this conversation." } });
         return;
       }
-      const text = String(req.body?.text || "Syntra test received. Your message is now visible in the operations dashboard.");
       const sent = await sendTelegramMessage(chatId, text);
       res.json({ data: sent });
     } catch (error) {

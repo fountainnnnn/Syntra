@@ -1,6 +1,6 @@
 import { config, isPlaceholderSecret } from "../server/config.js";
 import { processIncomingMessage } from "../server/services/process-message.js";
-import { deleteTelegramWebhook, getTelegramMe, getTelegramUpdates, sendTelegramMessage } from "../server/services/telegram.js";
+import { deleteTelegramWebhook, getTelegramMe, getTelegramUpdates } from "../server/services/telegram.js";
 import { appendLog, updateState } from "../server/store/state.js";
 
 if (isPlaceholderSecret(config.telegramBotToken)) {
@@ -18,7 +18,6 @@ if (isPlaceholderSecret(config.telegramBotToken)) {
   }, 60_000);
 } else {
   let offset: number | undefined;
-  let sentTestReply = false;
   const me = await getTelegramMe();
   await deleteTelegramWebhook();
   updateState((state) => {
@@ -49,12 +48,10 @@ if (isPlaceholderSecret(config.telegramBotToken)) {
 
         const chat = message.chat;
         const text = message.text ?? (message.photo ? "[photo received]" : message.document ? "[document received]" : message.voice ? "[voice received]" : "[attachment received]");
-        if (text === "/start") {
-          await sendTelegramMessage(chat.id, "Syntra demo bot connected. Send a customer-service style message and it will appear in the Syntra dashboard.");
-          continue;
-        }
-        if (text === "/demo") {
-          await sendTelegramMessage(chat.id, "Send: I paid yesterday but no one confirmed my booking. This is urgent.");
+        if (text.startsWith("/")) {
+          updateState((state) => {
+            appendLog(state, `Telegram command ${text} received from ${chat.username ?? chat.id}; no automatic reply sent.`);
+          });
           continue;
         }
 
@@ -65,11 +62,6 @@ if (isPlaceholderSecret(config.telegramBotToken)) {
           telegramUsername: chat.username,
           source: "telegram"
         });
-
-        if (config.telegramOutboundEnabled && !sentTestReply) {
-          await sendTelegramMessage(chat.id, "Syntra test received. Your message is now visible in the operations dashboard.");
-          sentTestReply = true;
-        }
       }
     } catch (error) {
       console.error(`[syntra-bot] ${error instanceof Error ? error.message : "Polling failed"}`);

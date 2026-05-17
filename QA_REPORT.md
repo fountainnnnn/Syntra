@@ -20,7 +20,7 @@ Syntra now has a Vite React frontend, separate Express TypeScript API, Telegram 
 | --- | --- | --- |
 | `npm run lint` | PASS | ESLint completed with 0 errors. |
 | `npm run build` | PASS | TypeScript passed and Vite built `dist/`; Vite reported only the expected large chunk warning from the dashboard bundle. |
-| `npm run test` | PASS | 1 Vitest file, 2 tests passed. |
+| `npm run test` | PASS | 2 Vitest files, 4 tests passed, including Telegram outbound policy checks. |
 | `npm run seed` | PASS | Seeded 7 customers, 7 conversations, 6 tasks, and 3 opportunities. |
 | `npm run sweep:endpoints` | PASS | Health, snapshot, conversations, Telegram status, system status, and demo injection endpoints returned JSON success. |
 | `npm run verify:real-apis` | PASS | OpenAI real Responses API verified with structured extraction; Telegram real Bot API verified. |
@@ -94,6 +94,7 @@ Playwright report output:
 - Added bounded overflow scrolling to the app shell, pages, kanban, columns, tables, activity streams, settings panels, and inbox panes.
 - Wired formerly inert dashboard, inbox, settings, filter, and task status controls to feedback or state changes.
 - Added `tests/e2e/interaction-polish.spec.ts` for the pipeline regression, scroll bounds, button feedback, filters, and task status controls.
+- Removed the Telegram bot worker's automatic test acknowledgement. The bot now ingests customer messages silently; outbound Telegram messages require explicit dashboard reply text.
 
 ## Remaining Risk
 

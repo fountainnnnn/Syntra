@@ -1,5 +1,13 @@
 # Syntra Notes
 
+## Telegram Outbound Policy - 2026-05-17
+
+- User clarified the bot must not send its old automatic test acknowledgement to customers.
+- Removed all automatic outbound Telegram sends from `scripts/telegram-bot.ts`; the worker now only ingests customer messages and ignores bot commands without replying.
+- Changed `/api/telegram/send-reply` to require explicit dashboard reply text and removed the old fallback test acknowledgement.
+- Added `tests/telegram-policy.test.ts` to assert the bot worker cannot send automatic customer messages and that the banned acknowledgement text is absent from send code.
+- Verification passed: `npm run lint`, `npm run test`, `npx tsc --noEmit`, `npm run build`, and `npm run test:e2e` with 48/48 Playwright tests.
+
 ## Interaction Polish - 2026-05-17
 
 - User reported the previous goal was not finished nicely enough and that Pipeline `Open Lead Detail` made some leads disappear.

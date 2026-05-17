@@ -162,3 +162,44 @@ Playwright report output:
 ## Real API Verification - 2026-05-17T07:38:50.045Z
 - OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
 - Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Endpoint Sweep - 2026-05-17T08:11:23.656Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T08:11:25.444Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T08:11:27.409Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T08:11:27.474Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Endpoint Sweep - 2026-05-17T08:28:11.481Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T08:28:12.618Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T08:28:14.595Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T08:28:14.677Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Logo Branding and Pipeline Rail QA - 2026-05-17
+- `logo.png` is used in the sidebar brand mark and represented in `DESIGN.md` as the canonical Syntra logo asset.
+- Pipeline desktop screenshots inspected at 1440px and 2048px-wide viewports: compact lanes, no double vertical board scrollbar, visible lead detail actions, and horizontal rail behavior preserved.
+- Final checks passed: `npm run build`, `npm run lint`, `npm run test`, `npm run design:lint`, `npm run design:spec`, `npm run design:export`, and `npm run test:e2e` (57/57).

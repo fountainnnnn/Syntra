@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Syntra
-description: "A premium light-mode customer operations command center for Telegram-first service teams. The system adapts Vercel's light surface discipline and shadow-as-border precision, with Linear-style product density and a scarce lavender-blue intelligence accent."
+description: "A premium light-mode customer operations command center for Telegram-first service teams. The system adapts Google's Design.MD contract discipline, Apple-style frosted glass surfaces, Linear-style product density, and Vercel's shadow-as-border precision with a scarce lavender-blue intelligence accent."
 colors:
   primary: "#5E6AD2"
   primary-hover: "#4F5BC4"
@@ -12,6 +12,12 @@ colors:
   surface: "#FCFBF7"
   surface-raised: "#FFFEFA"
   surface-muted: "#EEEAE0"
+  glass-tint: "#FFFEFA"
+  glass-lane: "#F2EFE7"
+  glass-highlight: "#FFFFFF"
+  brand-metal: "#202120"
+  brand-graphite: "#2F302F"
+  brand-silver: "#D8D8D2"
   ink: "#151617"
   ink-muted: "#4B5563"
   ink-subtle: "#7A7F87"
@@ -86,6 +92,8 @@ rounded:
   md: 7px
   lg: 8px
   xl: 10px
+  pane: 18px
+  glass: 22px
   full: 9999px
 spacing:
   xxs: 4px
@@ -95,6 +103,9 @@ spacing:
   lg: 24px
   xl: 32px
   xxl: 48px
+  page-x: 32px
+  page-y: 28px
+  panel-gap: 16px
 components:
   app-shell:
     backgroundColor: "{colors.canvas}"
@@ -105,6 +116,11 @@ components:
     textColor: "{colors.ink-muted}"
     rounded: "{rounded.lg}"
     padding: 12px
+  brand-mark:
+    backgroundColor: "{colors.brand-metal}"
+    textColor: "{colors.glass-highlight}"
+    rounded: "{rounded.pane}"
+    padding: 0
   command-bar:
     backgroundColor: "{colors.surface-raised}"
     textColor: "{colors.ink}"
@@ -164,10 +180,16 @@ components:
     typography: "{typography.body}"
     rounded: "{rounded.lg}"
     padding: 16px
+  glass-pane:
+    backgroundColor: "{colors.glass-tint}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.pane}"
+    padding: 16px
   graph-canvas:
     backgroundColor: "{colors.canvas-alt}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.glass}"
     padding: 16px
 ---
 
@@ -175,23 +197,29 @@ components:
 
 Syntra is a light-mode operations workbench, not a marketing page. The visual system uses a warm limestone canvas, off-white raised surfaces, narrow separators, compact controls, and dense operational rows. The dashboard should feel like Telegram conversations have been converted into a living business control surface.
 
-The primary reference is Vercel: light surface discipline, Geist-like type, compact controls, and shadow-as-border precision. The secondary reference is Linear: product UI is the protagonist, color is scarce, and hierarchy comes from information density rather than decoration.
+The primary reference for structure is Google's Design.MD file in this repo: tokens must stay explicit, inspectable, and reusable. The visual reference is Apple-style light glass: frosted command surfaces, luminous but readable panes, and carefully measured whitespace. Linear supplies product density, while Vercel supplies light surface discipline and shadow-as-border precision.
 
 ## Colors
 
 The base canvas is warm ivory (`{colors.canvas}`), never pure white. Raised surfaces use `{colors.surface}` and `{colors.surface-raised}` with hairline separation. Primary text uses near-black `{colors.ink}` rather than true black.
 
-The primary accent is Linear-inspired lavender-blue (`{colors.primary}`), reserved for AI extraction, focus states, active navigation, and primary actions. Telegram blue is used only to identify the Telegram channel. Severity colors are semantic: red for revenue or churn risk, amber for waiting or blocked work, green for resolved or healthy states, and blue for informational system status.
+The logo theme comes from `logo.png`: graphite metal, silver outline, white glow, and a restrained futuristic wordmark. Use that identity as a small brand tile and as the source of the app's pearl, silver, and graphite undertones. The primary product accent remains lavender-blue (`{colors.primary}`), reserved for AI extraction, focus states, active navigation, and primary actions. Telegram blue is used only to identify the Telegram channel. Severity colors are semantic: red for revenue or churn risk, amber for waiting or blocked work, green for resolved or healthy states, and blue for informational system status.
+
+## Logo
+
+Use `logo.png` as the canonical Syntra logo asset. In the app chrome, crop it to the glowing symbol inside a graphite glass tile so the mark is recognizable at rail size. Keep clear space around the tile equal to at least one quarter of its width. Do not replace the logo with generic sparkle icons, emoji, or unrelated marks.
 
 ## Typography
 
-Use Geist Sans when available, then Inter and system sans fallbacks. Use Geist Mono for IDs, timestamps, endpoint labels, and verification logs. Letter spacing stays at `0` across the system to preserve crisp UI text and avoid unstable layout.
+Use Apple system UI first, then Geist Sans, Inter, and system sans fallbacks. Use Geist Mono for IDs, timestamps, endpoint labels, and verification logs. Letter spacing stays at `0` across the system to preserve crisp UI text and avoid unstable layout.
 
 Headings are compact and workbench-sized. Do not use oversized landing-page hero type inside app routes. Numbers should use tabular numerals in CSS.
 
 ## Layout
 
 Use a product shell: left rail, top command bar, primary canvas, split panes, inspector panels, dense rows, charts, and graph surfaces. Cards are allowed for individual repeated objects, metrics, modals, and popovers, but page structure should be built from bands, panes, separators, and aligned data surfaces.
+
+Desktop spacing follows a deliberate 8px grid with 16px panel gaps, 24px section rhythm, 28px vertical page padding, and 32px-plus horizontal page padding. Adjacent panes should feel close enough to compare, while unrelated sections need clear air between them. Do not let each page invent its own gaps.
 
 Dashboard pages should prioritize scanability:
 - Command Center: metric strip, urgent queue, activity stream, pipeline and workload panels.
@@ -201,15 +229,15 @@ Dashboard pages should prioritize scanability:
 
 ## Elevation & Depth
 
-Use Vercel-style shadow-as-border for raised surfaces:
+Use Apple-style frosted glass for the app rail, command bar, split panes, metrics, graph canvas, and repeated operational cards. Glass must remain functional: translucent off-white fill, visible hairline, subtle highlight, and readable text. Use Vercel-style shadow-as-border for raised surfaces:
 
 `0 0 0 1px rgba(21, 22, 23, 0.08), 0 8px 22px rgba(35, 31, 24, 0.05)`
 
-Avoid heavy drop shadows. Most hierarchy should come from surface shifts, hairlines, alignment, and typography.
+Avoid heavy drop shadows. Most hierarchy should come from surface shifts, hairlines, alignment, blur depth, and typography.
 
 ## Shapes
 
-Corners stay restrained. Buttons and rows use 5 to 8px radii. Do not use large rounded cards as the dominant layout material. Pills are reserved for status indicators and filters.
+Corners are calm but more premium on glass panes. Buttons and rows use 7 to 10px radii. Major panes use 18 to 22px radii. Do not use large rounded cards as the dominant layout material. Pills are reserved for status indicators and filters.
 
 ## Components
 
@@ -222,6 +250,8 @@ Charts should be calm and readable with limited color. Use semantic color only w
 Do:
 - Keep the app fully light mode.
 - Use warm off-white surfaces instead of pure white everywhere.
+- Use frosted glass on real work surfaces: command bar, rail, panes, inspectors, metrics, graph canvas, and pipeline lanes.
+- Keep spacing intentional with a shared 8px grid, 16px pane gap, and 24px section rhythm.
 - Make dense product data the protagonist.
 - Use lavender-blue sparingly for intelligence and active state.
 - Show source evidence for AI conclusions.
@@ -230,7 +260,8 @@ Do:
 
 Don't:
 - Do not add dark page backgrounds or dark sidebars.
-- Do not use purple/blue gradients, glassmorphism, decorative orbs, or generic AI SaaS decoration.
+- Do not use purple/blue gradients, decorative orbs, blurry background blobs, or generic AI SaaS decoration.
+- Do not apply glass as decoration where it weakens hierarchy or text contrast.
 - Do not use nested cards.
 - Do not make dashboard routes look like landing pages.
 - Do not use emoji as UI icons.

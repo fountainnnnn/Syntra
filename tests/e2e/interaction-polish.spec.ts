@@ -30,21 +30,22 @@ test.describe("Syntra interaction polish", () => {
     expect(moved?.stage).toBe("Negotiation");
   });
 
-  test("keeps long operational panes bounded with internal scrolling", async ({ page }) => {
+  test("keeps the pipeline rail horizontal while stage columns own vertical scrolling", async ({ page }) => {
     await page.goto("/pipeline");
 
     const pipelineScroll = await page.locator(".kanban").evaluate((element) => {
       const style = getComputedStyle(element);
       return {
+        clientWidth: element.clientWidth,
         overflowX: style.overflowX,
         overflowY: style.overflowY,
-        maxHeight: style.maxHeight,
+        scrollWidth: element.scrollWidth,
       };
     });
 
     expect(pipelineScroll.overflowX).toMatch(/auto|scroll/);
-    expect(pipelineScroll.overflowY).toMatch(/auto|scroll/);
-    expect(pipelineScroll.maxHeight).not.toBe("none");
+    expect(pipelineScroll.scrollWidth).toBeGreaterThan(pipelineScroll.clientWidth);
+    expect(pipelineScroll.overflowY).toMatch(/hidden|clip|visible/);
 
     const columnScroll = await page.locator(".kanban-column").first().evaluate((element) => {
       const style = getComputedStyle(element);

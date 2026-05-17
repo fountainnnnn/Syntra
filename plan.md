@@ -2,9 +2,9 @@
 
 ## Current Stage
 
-Phase 5: Apple-style Pipeline and Operations Map visual refinement is complete.
+Phase 6: Syntra logo branding and Pipeline rail spacing correction is complete.
 
-Next phase: Commit and push this visual refinement checkpoint, then continue only if a new issue appears.
+Next phase: Commit and push this branding/spacing checkpoint, then continue only if a new issue appears.
 
 ## Success Criteria
 
@@ -16,6 +16,8 @@ Next phase: Commit and push this visual refinement checkpoint, then continue onl
 - Pipeline explains how Telegram buying-intent messages move through stages.
 - Operations Graph is readable as a left-to-right message-to-workflow map.
 - Pipeline and Operations Map avoid card overlap, preserve hierarchy, and use restrained frosted Apple-style surfaces for the desktop/tablet demo target.
+- The sidebar uses the canonical `logo.png` Syntra logo asset instead of a generic placeholder icon.
+- Pipeline lanes stay compact on wide desktop screens, avoid double vertical scrollbars, and keep the board as a horizontal rail with stage-owned vertical scrolling.
 
 ## Phase Plan
 
@@ -28,6 +30,7 @@ Next phase: Commit and push this visual refinement checkpoint, then continue onl
 7. Finalize `QA_REPORT.md`, `DEMO_README.md`, and `demo-script.md`.
 8. Improve Pipeline and Operations Graph comprehension without breaking existing route/data contracts.
 9. Refine Pipeline and Operations Map visual hierarchy, spacing, responsive behavior, and glass-style surface treatment using `impeccable layout` and `impeccable polish` references.
+10. Apply Syntra logo-based branding and correct the Pipeline rail spacing/scroll behavior against the user's wide screenshot.
 
 ## Latest Verification
 
@@ -40,7 +43,9 @@ Next phase: Commit and push this visual refinement checkpoint, then continue onl
 - `npm run design:lint`, `npm run design:spec`, `npm run design:export`: PASS.
 - `npm run test:e2e`: PASS, 57/57 Playwright tests across desktop, tablet, and mobile.
 - Desktop Pipeline and Operations Map screenshots were inspected after the visual refinement pass. Mobile remains covered by the existing regression suite, but it is not the visual optimization target.
+- Desktop Pipeline screenshot at 1440px and a manual 2048px wide screenshot were inspected after the logo/rail correction pass.
+- Final Pipeline screenshot confirms compact lanes, no double vertical board scrollbar, visible lead actions, and the `logo.png` brand mark in the sidebar.
 
 ## Next Action
 
-Stage intentional project files, commit this visual refinement phase, and push `main`.
+Stage intentional project files, commit this branding/spacing phase, and push `main`.

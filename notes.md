@@ -203,3 +203,48 @@
 - Desktop/tablet are the target surfaces for the demo. Existing mobile safeguards remain in place for regression coverage, but phone-specific optimization is not a priority.
 - Added a Playwright rail regression that checks horizontal board scrolling, single-row stage positioning, and lead-card button containment.
 - Verification passed: `npm run build`, `npm run lint`, `npm run test`, `npm run seed`, `npm run design:lint`, `npm run design:spec`, `npm run design:export`, `npm run test:e2e` (57/57), `npm run sweep:endpoints`, and `npm run verify:real-apis`.
+
+## Endpoint Sweep - 2026-05-17T08:11:23.657Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T08:11:25.445Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T08:11:27.409Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T08:11:27.475Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Logo Branding and Pipeline Rail Correction - 2026-05-17
+- User clarified the Pipeline screenshot still had funny spacing on a wide desktop viewport and asked why `logo.png` was not being used.
+- Replaced the generic sparkle brand mark with the canonical `logo.png` Syntra asset in the sidebar chrome.
+- Updated `DESIGN.md` so the brand system explicitly treats `logo.png` as the canonical mark and derives the light glass theme from its graphite, silver, and glow cues.
+- Corrected the Pipeline board so the rail scrolls horizontally only, each stage owns its own vertical scroll, and wide screens show compact lanes instead of oversized buckets.
+- Updated Playwright coverage to assert the new rail/column scroll split.
+- Inspected refreshed desktop screenshots at 1440px and a manual 2048px-wide Pipeline capture to match the user's screenshot context.
+- Final verification passed: `npm run build`, `npm run lint`, `npm run test`, `npm run design:lint`, `npm run design:spec`, `npm run design:export`, `npm run seed`, `npm run sweep:endpoints`, `npm run verify:real-apis`, and `npm run test:e2e` (57/57).
+
+## Endpoint Sweep - 2026-05-17T08:28:11.482Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T08:28:12.618Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T08:28:14.596Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T08:28:14.678Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)

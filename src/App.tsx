@@ -114,6 +114,8 @@ const nav = [
   { to: "/settings", label: "Settings", icon: Settings }
 ];
 
+const syntraLogoUrl = new URL("../logo.png", import.meta.url).href;
+
 export default function App() {
   const [snapshot, setSnapshot] = useState<Snapshot>(fallbackSnapshot);
   const [loading, setLoading] = useState(true);
@@ -147,7 +149,7 @@ export default function App() {
     <div className="app-shell" data-testid="app-shell">
       <aside className={`sidebar ${navOpen ? "is-open" : ""}`}>
         <div className="brand">
-          <div className="brand-mark"><Sparkles size={18} /></div>
+          <div className="brand-mark"><img src={syntraLogoUrl} alt="Syntra logo" /></div>
           <div>
             <strong>Syntra</strong>
             <span>Telegram ops intelligence</span>
@@ -414,7 +416,7 @@ function PipelinePage({ snapshot, refresh, notify }: { snapshot: Snapshot; refre
   const bottleneck = stageWithMostLeads(snapshot);
 
   return (
-    <section className="page">
+    <section className="page pipeline-page">
       <PageHeader title="Lead Pipeline" subtitle="Telegram conversations with buying intent, grouped by the next operational decision." />
       <section className="pipeline-guide" aria-label="Pipeline explanation">
         <div className="guide-flow">

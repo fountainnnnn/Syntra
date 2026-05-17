@@ -2,9 +2,9 @@
 
 ## Current Stage
 
-Phase 3: Interaction polish and pipeline repair are complete.
+Phase 4: Pipeline and Operations Map UX clarity is complete.
 
-Next phase: Commit and push this polish checkpoint, then continue only if a new issue appears.
+Next phase: Commit and push this UX clarity checkpoint, then continue only if a new issue appears.
 
 ## Success Criteria
 
@@ -13,6 +13,8 @@ Next phase: Commit and push this polish checkpoint, then continue only if a new 
 - `npm run wait:env` checks `.env.local` without printing secrets. Completed: both OpenAI and Telegram secrets became ready.
 - `plan.md`, `notes.md`, `QA_REPORT.md`, `DEMO_README.md`, and `demo-script.md` are accurate for the verified local demo.
 - Phase changes are committed and pushed after verification.
+- Pipeline explains how Telegram buying-intent messages move through stages.
+- Operations Graph is readable as a left-to-right message-to-workflow map.
 
 ## Phase Plan
 
@@ -23,18 +25,20 @@ Next phase: Commit and push this polish checkpoint, then continue only if a new 
 5. Build the premium light-mode dashboard pages and live data flow.
 6. Run endpoint sweeps, Playwright tests, responsive screenshots, build/lint/design checks, and real API verification where secrets exist.
 7. Finalize `QA_REPORT.md`, `DEMO_README.md`, and `demo-script.md`.
+8. Improve Pipeline and Operations Graph comprehension without breaking existing route/data contracts.
 
 ## Latest Verification
 
 - `npm run lint`: PASS.
 - `npm run build`: PASS.
-- `npm run test`: PASS, 2 Vitest tests.
+- `npm run test`: PASS, 4 Vitest tests.
 - `npm run seed`: PASS.
 - `npm run sweep:endpoints`: PASS, 6 endpoint checks.
 - `npm run verify:real-apis`: PASS, OpenAI and Telegram real APIs verified.
 - `npm run design:lint`, `npm run design:spec`, `npm run design:export`: PASS.
-- `npm run test:e2e`: PASS, 48/48 Playwright tests across desktop, tablet, and mobile.
+- `npm run test:e2e`: PASS, 54/54 Playwright tests across desktop, tablet, and mobile.
+- Desktop and mobile screenshots for `/pipeline` and `/graph` were inspected after the UX clarity pass.
 
 ## Next Action
 
-Stage intentional project files, commit this polish phase, and push `main`.
+Stage intentional project files, commit this UX clarity phase, and push `main`.

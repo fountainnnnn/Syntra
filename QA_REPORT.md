@@ -95,6 +95,10 @@ Playwright report output:
 - Wired formerly inert dashboard, inbox, settings, filter, and task status controls to feedback or state changes.
 - Added `tests/e2e/interaction-polish.spec.ts` for the pipeline regression, scroll bounds, button feedback, filters, and task status controls.
 - Removed the Telegram bot worker's automatic test acknowledgement. The bot now ingests customer messages silently; outbound Telegram messages require explicit dashboard reply text.
+- Reworked `/pipeline` into a clearer Lead Pipeline with a "How this board works" flow, stage explanations, bottleneck callout, source-aware lead cards, and a drawer that explains why the lead is in its stage and what happens next.
+- Reworked `/graph` into an Operations Map with left-to-right workflow steps from Telegram Message through Owner Action, preserving graph node selectors and inspector evidence.
+- Added `tests/e2e/workflow-clarity.spec.ts` to lock the new comprehension copy and graph step interactions across desktop, tablet, and mobile.
+- Verified the expanded Playwright suite at 54/54 passing and inspected the generated desktop/mobile Pipeline and Operations Map screenshots.
 
 ## Remaining Risk
 
@@ -116,5 +120,23 @@ Playwright report output:
 - Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
 
 ## Real API Verification - 2026-05-17T06:36:42.140Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Endpoint Sweep - 2026-05-17T07:16:56.219Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T07:18:31.094Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T07:18:32.761Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T07:18:32.828Z
 - OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
 - Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)

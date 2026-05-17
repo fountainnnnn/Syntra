@@ -37,6 +37,56 @@ import type { Customer, Insight, Opportunity, OpportunityStage, Snapshot, Task }
 
 const stages: OpportunityStage[] = ["New Inquiry", "Qualified", "Waiting Reply", "Proposal Needed", "Proposal Sent", "Negotiation", "Won", "Lost"];
 
+const stageGuidance: Record<OpportunityStage, { purpose: string; action: string }> = {
+  "New Inquiry": {
+    purpose: "Syntra found buying intent in a Telegram conversation and opened the lead for review.",
+    action: "Confirm the ask, check value and risk, then qualify or reply from Inbox."
+  },
+  Qualified: {
+    purpose: "The lead has enough customer, value, and intent evidence to continue commercial follow-up.",
+    action: "Assign an owner and keep the next reply moving."
+  },
+  "Waiting Reply": {
+    purpose: "The customer needs a response before the opportunity can move forward.",
+    action: "Use the source conversation to reply, then update the stage."
+  },
+  "Proposal Needed": {
+    purpose: "The customer is ready for pricing, package details, or an invoice before deciding.",
+    action: "Prepare the proposal from the extracted requirements."
+  },
+  "Proposal Sent": {
+    purpose: "Syntra is tracking a sent proposal while the team waits for customer confirmation.",
+    action: "Follow up on acceptance, payment, or negotiation signals."
+  },
+  Negotiation: {
+    purpose: "The customer is discussing final terms, timing, or price.",
+    action: "Resolve blockers and confirm the booking path."
+  },
+  Won: {
+    purpose: "The opportunity has converted into confirmed work.",
+    action: "Keep delivery tasks and customer expectations synchronized."
+  },
+  Lost: {
+    purpose: "The opportunity is no longer active or was declined.",
+    action: "Review the risk signal and capture a learning for the next lead."
+  }
+};
+
+const pipelineGuide = [
+  {
+    title: "Capture from Telegram",
+    body: "Inbound messages are ingested first. Syntra keeps the original conversation attached so every lead stays source-evident."
+  },
+  {
+    title: "Score buying intent",
+    body: "The system extracts intent, value, sentiment, and risk, then places the lead in the first useful stage."
+  },
+  {
+    title: "Operator moves the stage",
+    body: "A human owner takes the next action, replies or prepares work, then moves the lead when the evidence changes."
+  }
+];
+
 const fallbackSnapshot: Snapshot = {
   metrics: { activeConversations: 0, revenueAtRisk: 0, unresolvedIssues: 0, averageResponseTime: "pending" },
   customers: [],
@@ -359,31 +409,65 @@ function PipelinePage({ snapshot, refresh, notify }: { snapshot: Snapshot; refre
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
   const selectedOpportunity = snapshot.opportunities.find((opportunity) => opportunity.id === selectedOpportunityId) ?? null;
   const selectedCustomer = selectedOpportunity ? customerFor(snapshot, selectedOpportunity.customerId) : undefined;
+  const selectedConversation = selectedOpportunity ? conversationFor(snapshot, selectedOpportunity.conversationId) : undefined;
+  const selectedMessage = selectedOpportunity ? latestMessageForConversation(snapshot, selectedOpportunity.conversationId) : undefined;
+  const bottleneck = stageWithMostLeads(snapshot);
 
   return (
     <section className="page">
-      <PageHeader title="Pipeline" subtitle="Telegram leads moving through operational stages." />
-      <Panel title="AI Pipeline Insight"><p>Corporate demand is healthy, but invoice response delay is the main conversion bottleneck.</p></Panel>
-      <div className="kanban">
-        {stages.map((stage) => (
-          <section key={stage} className="kanban-column">
-            <h2>{stage}</h2>
-            {snapshot.opportunities.filter((opportunity) => opportunity.stage === stage).map((opportunity) => (
-              <LeadCard key={opportunity.id} opportunity={opportunity} snapshot={snapshot} onOpen={() => setSelectedOpportunityId(opportunity.id)} />
+      <PageHeader title="Lead Pipeline" subtitle="Telegram conversations with buying intent, grouped by the next operational decision." />
+      <section className="pipeline-guide" aria-label="Pipeline explanation">
+        <div className="guide-flow">
+          <h2>How this board works</h2>
+          <div className="guide-steps">
+            {pipelineGuide.map((step, index) => (
+              <article className="guide-step" key={step.title}>
+                <span className="step-index">{index + 1}</span>
+                <div>
+                  <strong>{step.title}</strong>
+                  <p>{step.body}</p>
+                </div>
+              </article>
             ))}
-          </section>
-        ))}
+          </div>
+        </div>
+        <aside className="bottleneck-panel">
+          <span>Bottleneck</span>
+          <strong>{bottleneck}</strong>
+          <p>{stageGuidance[bottleneck].action}</p>
+        </aside>
+      </section>
+      <div className="kanban">
+        {stages.map((stage) => {
+          const stageOpportunities = snapshot.opportunities.filter((opportunity) => opportunity.stage === stage);
+          return (
+            <section key={stage} className="kanban-column">
+              <div className="kanban-heading">
+                <h2>{stage}</h2>
+                <span>{stageOpportunities.length} leads</span>
+              </div>
+              <p className="stage-purpose">{stageGuidance[stage].purpose}</p>
+              {stageOpportunities.map((opportunity) => (
+                <LeadCard key={opportunity.id} opportunity={opportunity} snapshot={snapshot} onOpen={() => setSelectedOpportunityId(opportunity.id)} />
+              ))}
+              {stageOpportunities.length === 0 && <p className="muted empty-state">No leads here. Move a lead only after the owner action is complete.</p>}
+            </section>
+          );
+        })}
       </div>
       {selectedOpportunity && (
         <Drawer title="Lead Detail" onClose={() => setSelectedOpportunityId(null)}>
           <Field label="Lead Id" value={selectedOpportunity.id} />
           <Field label="Customer" value={selectedCustomer?.name} />
           <Field label="Stage" value={selectedOpportunity.stage} />
+          <Field label="Why this lead is here" value={stageGuidance[selectedOpportunity.stage].purpose} />
           <Field label="Value" value={money(selectedOpportunity.value)} />
           <Field label="Intent" value={selectedOpportunity.intent} />
           <Field label="Next Action" value={selectedOpportunity.nextAction} />
+          <Field label="What happens next" value={stageGuidance[selectedOpportunity.stage].action} />
           <Field label="Risk" value={selectedOpportunity.risk} />
-          <Field label="Source" value={selectedOpportunity.source} />
+          <Field label="Source Conversation" value={selectedConversation?.title ?? selectedOpportunity.source} />
+          <Field label="Source Telegram Evidence" value={selectedMessage?.text ?? selectedOpportunity.source} />
           <div className="button-row">
             <button
               disabled={selectedOpportunity.stage === "Negotiation"}
@@ -455,31 +539,109 @@ function InsightsPage({ snapshot }: { snapshot: Snapshot }) {
 
 function GraphPage({ snapshot }: { snapshot: Snapshot }) {
   const first = snapshot.conversations[0];
-  const [selected, setSelected] = useState("Customer");
+  const [selected, setSelected] = useState("telegram-message");
   const customer = first ? customerFor(snapshot, first.customerId) : undefined;
-  const nodes = [
-    { id: "Customer", label: customer?.name ?? "Customer", x: 12, y: 42 },
-    { id: "Conversation", label: first?.intent ?? "Conversation", x: 34, y: 18 },
-    { id: "Task", label: snapshot.tasks[0]?.title ?? "Task", x: 58, y: 46 },
-    { id: "Risk", label: "Revenue Risk", x: 82, y: 24 },
-    { id: "Owner", label: first?.owner ?? "Owner", x: 72, y: 70 }
+  const message = first ? latestMessageForConversation(snapshot, first.id) : undefined;
+  const task = first ? snapshot.tasks.find((item) => item.conversationId === first.id) ?? snapshot.tasks[0] : snapshot.tasks[0];
+  const opportunity = first ? snapshot.opportunities.find((item) => item.conversationId === first.id) ?? snapshot.opportunities[0] : snapshot.opportunities[0];
+  const workflowSteps = [
+    {
+      id: "telegram-message",
+      title: "Telegram Message",
+      meta: "Raw customer signal",
+      summary: message?.text ?? "Waiting for the next inbound Telegram message.",
+      why: "This is the source of truth. Every downstream field should be traceable back to the customer message.",
+      evidence: message?.text ?? first?.source ?? "No message selected.",
+      linked: first ? `conversation ${first.id}, customer ${first.customerId}` : "No linked objects yet",
+      nextAction: first?.suggestedAction ?? "Wait for Telegram ingestion."
+    },
+    {
+      id: "ai-extraction",
+      title: "AI Extraction",
+      meta: "Intent, priority, sentiment",
+      summary: first ? `${first.intent}, ${first.priority} priority, ${first.sentiment} sentiment` : "No extraction available yet.",
+      why: "Syntra converts the text into operational fields so the team can sort and act without rereading every thread.",
+      evidence: first?.aiSummary ?? "No AI summary available.",
+      linked: first ? `conversation ${first.id}` : "No linked objects yet",
+      nextAction: "Check whether the extracted intent matches the visible source evidence."
+    },
+    {
+      id: "customer-record",
+      title: "Customer Record",
+      meta: customer?.name ?? "Customer memory",
+      summary: customer ? `${customer.segment}, ${customer.sentiment}, owner ${customer.owner}` : "Customer profile appears after ingestion.",
+      why: "Customer memory keeps repeated issues, owner assignment, value, and latest intent in one place.",
+      evidence: customer?.latestIntent ?? first?.intent ?? "No customer evidence yet.",
+      linked: customer ? `customer ${customer.id}, ${customer.telegramHandle ?? "Telegram linked"}` : "No linked objects yet",
+      nextAction: customer?.openIssues ? "Review open issues before replying." : "Keep the owner and next reply aligned."
+    },
+    {
+      id: "task-created",
+      title: "Task Created",
+      meta: task?.owner ?? first?.owner ?? "Owner queue",
+      summary: task?.title ?? first?.suggestedAction ?? "Suggested action becomes a task when the owner needs work queued.",
+      why: "Tasks turn the extracted customer need into accountable operational work.",
+      evidence: task?.sourceText ?? first?.aiSummary ?? "No task evidence yet.",
+      linked: task ? `task ${task.id}, conversation ${task.conversationId}` : "Task can be created from Inbox.",
+      nextAction: task?.status === "done" ? "Confirm the customer-visible follow-up is complete." : task?.title ?? first?.suggestedAction ?? "Create a task from Inbox."
+    },
+    {
+      id: "pipeline-impact",
+      title: "Pipeline Impact",
+      meta: opportunity?.stage ?? "Lead stage",
+      summary: opportunity ? `${opportunity.intent} at ${money(opportunity.value)} in ${opportunity.stage}` : "Buying intent opens a pipeline lead.",
+      why: "This shows whether a message affects revenue, where the lead sits, and which stage blocks conversion.",
+      evidence: opportunity?.source ?? first?.source ?? "No opportunity evidence yet.",
+      linked: opportunity ? `opportunity ${opportunity.id}, customer ${opportunity.customerId}` : "No linked opportunity yet",
+      nextAction: opportunity?.nextAction ?? first?.suggestedAction ?? "Qualify the lead before moving stages."
+    },
+    {
+      id: "owner-action",
+      title: "Owner Action",
+      meta: first?.owner ?? customer?.owner ?? "Team handoff",
+      summary: first?.suggestedAction ?? opportunity?.nextAction ?? "The team sees the next customer-safe action.",
+      why: "The workflow ends in a human decision: reply, create work, escalate, or move the lead.",
+      evidence: first?.aiSummary ?? opportunity?.risk ?? "No owner evidence yet.",
+      linked: first ? `owner ${first.owner}, conversation ${first.id}` : "No linked owner yet",
+      nextAction: first?.suggestedAction ?? "Wait for an inbound message."
+    }
   ];
+  const selectedStep = workflowSteps.find((step) => step.id === selected) ?? workflowSteps[0];
   return (
     <section className="page">
-      <PageHeader title="Operations Graph" subtitle="How Telegram messages become operational state." />
+      <PageHeader title="Operations Map" subtitle="Follow one Telegram message as Syntra turns it into work, revenue context, and owner action." />
+      <p className="graph-help">Read left to right. The operations graph canvas below shows one message becoming extracted fields, customer memory, tasks, pipeline impact, and a team action.</p>
       <div className="graph-layout">
-        <div className="graph-canvas" aria-label="graph canvas">
-          <svg viewBox="0 0 100 80" role="img" aria-label="Operations graph canvas">
-            <path d="M18 42 L34 18 L58 46 L82 24 M58 46 L72 70" fill="none" stroke="#C8C0B3" strokeWidth="0.8" />
-            {nodes.map((node, index) => (
-              <g key={node.id} data-node-id={node.id} data-testid="graph-node" role="button" tabIndex={0} onClick={() => setSelected(node.id)}>
-                <circle cx={node.x} cy={node.y} r="5.8" fill={index === 0 ? "#5E6AD2" : "#FFFEFA"} stroke="#5E6AD2" strokeWidth="0.8" />
-                <text x={node.x} y={node.y + 11} textAnchor="middle" fontSize="3.2" fill="#151617">{node.label.slice(0, 18)}</text>
-              </g>
+        <div className="graph-canvas" aria-label="Operations graph canvas">
+          <div className="workflow-map">
+            {workflowSteps.map((step, index) => (
+              <button
+                aria-pressed={selectedStep.id === step.id}
+                className={`workflow-step ${selectedStep.id === step.id ? "selected" : ""}`}
+                data-node-id={step.id}
+                data-testid="graph-node"
+                key={step.id}
+                onClick={() => setSelected(step.id)}
+              >
+                <span className="workflow-index">{index + 1}</span>
+                <span className="workflow-copy">
+                  <strong>{step.title}</strong>
+                  <small>{step.meta}</small>
+                  <span>{step.summary}</span>
+                </span>
+              </button>
             ))}
-          </svg>
+          </div>
         </div>
-        <aside className="inspector"><h2>Node Inspector</h2><Field label="Selected Node" value={selected} /><Field label="Evidence" value={first?.aiSummary ?? "No conversation selected"} /><Field label="Linked Objects" value="customer, conversation, task, opportunity, insight" /><Field label="Next Action" value={first?.suggestedAction ?? "Wait for Telegram message"} /></aside>
+        <aside className="inspector">
+          <h2>Selected Workflow Step</h2>
+          <p className="muted">Node Inspector</p>
+          <Field label="Selected Node" value={selectedStep.title} />
+          <Field label="Why it matters" value={selectedStep.why} />
+          <Field label="Source Evidence" value={selectedStep.evidence} />
+          <Field label="Linked Objects" value={selectedStep.linked} />
+          <Field label="Next Action" value={selectedStep.nextAction} />
+        </aside>
       </div>
     </section>
   );
@@ -565,7 +727,20 @@ function InsightRow({ insight }: { insight: Insight }) {
 
 function LeadCard({ opportunity, snapshot, onOpen }: { opportunity: Opportunity; snapshot: Snapshot; onOpen: () => void }) {
   const customer = customerFor(snapshot, opportunity.customerId);
-  return <article className="lead-card" data-testid={`lead-card-${opportunity.id}`}><strong>{customer?.name}</strong><span>{opportunity.intent}</span><span>Value {money(opportunity.value)}</span><span>Sentiment {opportunity.sentiment}</span><span>Next action: {opportunity.nextAction}</span><span>Risk: {opportunity.risk}</span><span>Source: {opportunity.source}</span><button onClick={onOpen}>Open Lead Detail</button></article>;
+  const conversation = conversationFor(snapshot, opportunity.conversationId);
+  return (
+    <article className="lead-card" data-testid={`lead-card-${opportunity.id}`}>
+      <strong>{customer?.name}</strong>
+      <span>{opportunity.intent}</span>
+      <span><b>Why it is here</b>{stageGuidance[opportunity.stage].purpose}</span>
+      <span>Value {money(opportunity.value)}</span>
+      <span>Sentiment {opportunity.sentiment}</span>
+      <span><b>Next owner action</b>{opportunity.nextAction}</span>
+      <span>Risk: {opportunity.risk}</span>
+      <span><b>Source conversation</b>{conversation?.title ?? opportunity.source}</span>
+      <button onClick={onOpen}>Open Lead Detail</button>
+    </article>
+  );
 }
 
 function ActivityStream({ snapshot }: { snapshot: Snapshot }) {
@@ -574,6 +749,24 @@ function ActivityStream({ snapshot }: { snapshot: Snapshot }) {
 
 function customerFor(snapshot: Snapshot, customerId: string) {
   return snapshot.customers.find((customer) => customer.id === customerId);
+}
+
+function conversationFor(snapshot: Snapshot, conversationId: string) {
+  return snapshot.conversations.find((conversation) => conversation.id === conversationId);
+}
+
+function latestMessageForConversation(snapshot: Snapshot, conversationId: string) {
+  return snapshot.messages
+    .filter((message) => message.conversationId === conversationId)
+    .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())[0];
+}
+
+function stageWithMostLeads(snapshot: Snapshot): OpportunityStage {
+  return stages.reduce<OpportunityStage>((current, stage) => {
+    const currentCount = snapshot.pipelineCounts[current] ?? 0;
+    const stageCount = snapshot.pipelineCounts[stage] ?? 0;
+    return stageCount > currentCount ? stage : current;
+  }, "New Inquiry");
 }
 
 function money(value: number) {

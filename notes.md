@@ -149,3 +149,29 @@
 ## Real API Verification - 2026-05-17T06:36:42.141Z
 - OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
 - Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Endpoint Sweep - 2026-05-17T07:16:56.220Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## UX Clarity Pass - 2026-05-17
+- Pipeline is now labeled as Lead Pipeline and explains the flow: Capture from Telegram, Score buying intent, Operator moves the stage.
+- Pipeline cards now state why the lead is in the current stage, the next owner action, and the source conversation while preserving the `Open Lead Detail` and `Move to Negotiation` behavior.
+- Operations Graph is now an Operations Map with six readable workflow steps: Telegram Message, AI Extraction, Customer Record, Task Created, Pipeline Impact, and Owner Action.
+- The graph inspector now explains why the selected workflow step matters, its source evidence, linked objects, and next action.
+- Added focused Playwright coverage in `tests/e2e/workflow-clarity.spec.ts`.
+- Verification passed: `npm run build`, `npm run lint`, `npm run test`, `npm run seed`, `npm run design:lint`, `npm run design:spec`, `npm run design:export`, `npm run test:e2e` (54/54), `npm run sweep:endpoints`, and `npm run verify:real-apis`.
+
+## OpenAI Verification - 2026-05-17T07:18:31.095Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T07:18:32.762Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T07:18:32.829Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)

@@ -32,6 +32,14 @@ export function updateTaskStatus(id: string, status: TaskStatus) {
   return request(`/api/tasks/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
 }
 
+export function createTask(conversationId: string, title: string) {
+  return request("/api/tasks", { method: "POST", body: JSON.stringify({ conversationId, title }) });
+}
+
+export function updateConversationStatus(id: string, status: string) {
+  return request(`/api/conversations/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
+}
+
 export function updateOpportunityStage(id: string, stage: OpportunityStage) {
   return request(`/api/opportunities/${id}/stage`, { method: "POST", body: JSON.stringify({ stage }) });
 }
@@ -42,4 +50,17 @@ export function sendTelegramReply(conversationId: string, text: string) {
 
 export function seedDemoData() {
   return request("/api/system/seed", { method: "POST", body: "{}" });
+}
+
+export function verifyOpenAI() {
+  return request("/api/system/verify-openai", { method: "POST", body: "{}" });
+}
+
+export function verifyTelegram() {
+  return request("/api/system/verify-telegram", { method: "POST", body: "{}" });
+}
+
+export async function verifyRealApis() {
+  const [openai, telegram] = await Promise.allSettled([verifyOpenAI(), verifyTelegram()]);
+  return { openai, telegram };
 }

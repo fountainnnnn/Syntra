@@ -2,9 +2,9 @@
 
 ## Current Stage
 
-Phase 2: Backend, frontend, Telegram bot worker, real API verification, design checks, and Playwright QA are complete.
+Phase 3: Interaction polish and pipeline repair are complete.
 
-Next phase: Commit and push this verified demo build checkpoint, then continue only if a new polish/finalization request appears.
+Next phase: Commit and push this polish checkpoint, then continue only if a new issue appears.
 
 ## Success Criteria
 
@@ -33,8 +33,8 @@ Next phase: Commit and push this verified demo build checkpoint, then continue o
 - `npm run sweep:endpoints`: PASS, 6 endpoint checks.
 - `npm run verify:real-apis`: PASS, OpenAI and Telegram real APIs verified.
 - `npm run design:lint`, `npm run design:spec`, `npm run design:export`: PASS.
-- `npm run test:e2e`: PASS, 36/36 Playwright tests across desktop, tablet, and mobile.
+- `npm run test:e2e`: PASS, 48/48 Playwright tests across desktop, tablet, and mobile.
 
 ## Next Action
 
-Stage intentional project files, commit this verified phase, and push `main`.
+Stage intentional project files, commit this polish phase, and push `main`.

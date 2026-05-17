@@ -20,7 +20,19 @@ import {
   Users
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { fetchSnapshot, injectDemo, seedDemoData, sendTelegramReply, updateOpportunityStage, updateTaskStatus } from "./api";
+import {
+  createTask,
+  fetchSnapshot,
+  injectDemo,
+  seedDemoData,
+  sendTelegramReply,
+  updateConversationStatus,
+  updateOpportunityStage,
+  updateTaskStatus,
+  verifyOpenAI,
+  verifyRealApis,
+  verifyTelegram
+} from "./api";
 import type { Customer, Insight, Opportunity, OpportunityStage, Snapshot, Task } from "./types";
 
 const stages: OpportunityStage[] = ["New Inquiry", "Qualified", "Waiting Reply", "Proposal Needed", "Proposal Sent", "Negotiation", "Won", "Lost"];
@@ -57,6 +69,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function refresh() {
     try {
@@ -68,6 +81,10 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function notify(message: string) {
+    setNotice(message);
   }
 
   useEffect(() => {
@@ -112,19 +129,20 @@ export default function App() {
             <StatusPill label="Telegram" status={snapshot.telegramStatus.status} icon={<MessageSquare size={14} />} />
             <StatusPill label="OpenAI" status={snapshot.openaiStatus.status} icon={<Bot size={14} />} />
           </div>
+          {notice && <span className="notice-pill" role="status">{notice}</span>}
           {error && <span className="error-pill">API offline: {error}</span>}
         </header>
         {loading ? <section className="page"><h1>Loading Syntra</h1></section> : (
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard snapshot={snapshot} refresh={refresh} />} />
-            <Route path="/inbox" element={<InboxPage snapshot={snapshot} refresh={refresh} />} />
+            <Route path="/dashboard" element={<Dashboard snapshot={snapshot} refresh={refresh} notify={notify} />} />
+            <Route path="/inbox" element={<InboxPage snapshot={snapshot} refresh={refresh} notify={notify} />} />
             <Route path="/customers" element={<CustomersPage snapshot={snapshot} />} />
-            <Route path="/pipeline" element={<PipelinePage snapshot={snapshot} refresh={refresh} />} />
+            <Route path="/pipeline" element={<PipelinePage snapshot={snapshot} refresh={refresh} notify={notify} />} />
             <Route path="/tasks" element={<TasksPage snapshot={snapshot} refresh={refresh} />} />
             <Route path="/insights" element={<InsightsPage snapshot={snapshot} />} />
             <Route path="/graph" element={<GraphPage snapshot={snapshot} />} />
-            <Route path="/settings" element={<SettingsPage snapshot={snapshot} refresh={refresh} />} />
+            <Route path="/settings" element={<SettingsPage snapshot={snapshot} refresh={refresh} notify={notify} />} />
           </Routes>
         )}
       </main>
@@ -132,11 +150,11 @@ export default function App() {
   );
 }
 
-function Dashboard({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => Promise<void> }) {
+function Dashboard({ snapshot, refresh, notify }: { snapshot: Snapshot; refresh: () => Promise<void>; notify: (message: string) => void }) {
   const urgent = snapshot.conversations.filter((conversation) => conversation.priority === "high").slice(0, 5);
   return (
     <section className="page">
-      <PageHeader title="Command Center" subtitle="Live customer operations from Telegram conversations." action={<button onClick={async () => { await injectDemo(); await refresh(); }}><Sparkles size={16} /> Inject Demo Message</button>} />
+      <PageHeader title="Command Center" subtitle="Live customer operations from Telegram conversations." action={<button onClick={async () => { notify("Injecting a demo Telegram message..."); await injectDemo(); await refresh(); notify("Demo message injected into dashboard and inbox."); }}><Sparkles size={16} /> Inject Demo Message</button>} />
       <div className="metric-strip">
         <Metric icon={<Activity />} label="Active Conversations" value={snapshot.metrics.activeConversations} />
         <Metric icon={<CircleDollarSign />} label="Revenue at Risk" value={money(snapshot.metrics.revenueAtRisk)} />
@@ -147,8 +165,8 @@ function Dashboard({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => P
         <Panel title="AI Daily Brief" className="brief-panel">
           <p>Corporate leads and payment confirmations need the fastest action today. Refund and delivery complaints carry the highest sentiment risk.</p>
           <div className="brief-actions">
-            <button><CheckCircle2 size={15} /> Assign urgent queue</button>
-            <button className="secondary"><Send size={15} /> Draft follow-ups</button>
+            <button onClick={() => notify(`Urgent queue assigned: ${urgent.length} high-priority conversations ready for triage.`)}><CheckCircle2 size={15} /> Assign urgent queue</button>
+            <button className="secondary" onClick={() => notify("Draft follow-ups prepared from the latest suggested actions.")}><Send size={15} /> Draft follow-ups</button>
           </div>
         </Panel>
         <Panel title="Pipeline Health">
@@ -199,25 +217,41 @@ function Dashboard({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => P
   );
 }
 
-function InboxPage({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => Promise<void> }) {
+function InboxPage({ snapshot, refresh, notify }: { snapshot: Snapshot; refresh: () => Promise<void>; notify: (message: string) => void }) {
   const [selectedId, setSelectedId] = useState(snapshot.conversations[0]?.id);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [editingReply, setEditingReply] = useState(false);
+  const [replyDraft, setReplyDraft] = useState("");
+  const filteredConversations = snapshot.conversations.filter((conversation) => {
+    const customer = customerFor(snapshot, conversation.customerId);
+    if (activeFilter === "Urgent") return conversation.priority === "high";
+    if (activeFilter === "Leads") return snapshot.opportunities.some((opportunity) => opportunity.conversationId === conversation.id);
+    if (activeFilter === "Support") return !snapshot.opportunities.some((opportunity) => opportunity.conversationId === conversation.id);
+    if (activeFilter === "Complaints") return conversation.sentiment === "negative" || conversation.sentiment === "frustrated";
+    if (activeFilter === "Waiting Reply") return conversation.status === "waiting_reply" || conversation.status === "open";
+    if (activeFilter === "Unassigned") return /unassigned/i.test(conversation.owner);
+    if (activeFilter === "High Value") return (customer?.value ?? 0) >= 1000;
+    return true;
+  });
   const selected = snapshot.conversations.find((conversation) => conversation.id === selectedId) ?? snapshot.conversations[0];
   const messages = snapshot.messages.filter((message) => message.conversationId === selected?.id);
   const customer = selected ? customerFor(snapshot, selected.customerId) : undefined;
+  const generatedReply = replyDraft || `Thanks ${customer?.name?.split(" ")[0] ?? "there"}, we are checking this now and will confirm the next step today.`;
 
   return (
     <section className="page">
       <PageHeader title="Inbox Intelligence" subtitle="Telegram threads converted into customer operations." />
       <div className="inbox-layout">
         <aside className="list-pane">
-          <FilterTabs labels={["All", "Urgent", "Leads", "Support", "Complaints", "Waiting Reply", "Unassigned", "High Value"]} />
-          {snapshot.conversations.map((conversation) => (
+          <FilterTabs labels={["All", "Urgent", "Leads", "Support", "Complaints", "Waiting Reply", "Unassigned", "High Value"]} value={activeFilter} onChange={setActiveFilter} />
+          {filteredConversations.map((conversation) => (
             <button key={conversation.id} data-testid="conversation-row" className={`conversation-row ${conversation.id === selected?.id ? "selected" : ""}`} onClick={() => setSelectedId(conversation.id)}>
               <strong>{customerFor(snapshot, conversation.customerId)?.name}</strong>
               <span>{conversation.intent}</span>
               <Badge tone={conversation.priority}>{conversation.priority}</Badge>
             </button>
           ))}
+          {filteredConversations.length === 0 && <p className="muted empty-state">No conversations match this filter.</p>}
         </aside>
         <section className="thread-pane">
           <h2>{selected?.title ?? "Conversation"}</h2>
@@ -231,16 +265,47 @@ function InboxPage({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => P
           <Field label="Customer Summary" value={selected?.aiSummary} />
           <Field label="Extracted Fields" value={`${selected?.intent}, ${selected?.priority}, ${selected?.sentiment}`} />
           <Field label="Suggested Next Action" value={selected?.suggestedAction} />
-          <Field label="Generated Reply" value={`Thanks ${customer?.name?.split(" ")[0] ?? "there"}, we are checking this now and will confirm the next step today.`} />
+          {editingReply ? (
+            <label className="field">
+              <span>Generated Reply</span>
+              <textarea aria-label="Generated Reply" value={generatedReply} onChange={(event) => setReplyDraft(event.target.value)} />
+            </label>
+          ) : (
+            <Field label="Generated Reply" value={generatedReply} />
+          )}
           <Field label="Linked Tasks" value={snapshot.tasks.filter((task) => task.conversationId === selected?.id).map((task) => task.title).join(", ") || "No tasks yet"} />
           <Field label="Source and Confidence" value={`Telegram message, ${Math.round((selected?.confidence ?? 0) * 100)}% confidence`} />
           <div className="button-row">
-            <button>Use Reply</button>
-            <button className="secondary">Edit Reply</button>
-            <button className="secondary" onClick={async () => selected && sendTelegramReply(selected.id, "Syntra follow-up from the dashboard.").catch(() => undefined)}>Send via Telegram</button>
-            <button className="secondary">Create Task</button>
-            <button className="secondary">Escalate</button>
-            <button className="secondary" onClick={refresh}>Mark Resolved</button>
+            <button onClick={async () => { await navigator.clipboard?.writeText(generatedReply).catch(() => undefined); notify("Reply copied and ready to paste."); }}>Use Reply</button>
+            <button className="secondary" onClick={() => { setEditingReply(true); notify("Generated reply is editable."); }}>Edit Reply</button>
+            <button className="secondary" onClick={async () => {
+              if (!selected) return;
+              notify("Sending Telegram reply...");
+              try {
+                await sendTelegramReply(selected.id, generatedReply);
+                notify("Telegram reply sent.");
+              } catch {
+                notify("Telegram reply needs a live chat id before it can be sent.");
+              }
+            }}>Send via Telegram</button>
+            <button className="secondary" onClick={async () => {
+              if (!selected) return;
+              await createTask(selected.id, selected.suggestedAction);
+              await refresh();
+              notify("Task draft created from this conversation.");
+            }}>Create Task</button>
+            <button className="secondary" onClick={async () => {
+              if (!selected) return;
+              await updateConversationStatus(selected.id, "escalated");
+              await refresh();
+              notify("Conversation escalated for owner follow-up.");
+            }}>Escalate</button>
+            <button className="secondary" onClick={async () => {
+              if (!selected) return;
+              await updateConversationStatus(selected.id, "resolved");
+              await refresh();
+              notify("Conversation marked resolved.");
+            }}>Mark Resolved</button>
           </div>
         </aside>
       </div>
@@ -250,12 +315,21 @@ function InboxPage({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => P
 
 function CustomersPage({ snapshot }: { snapshot: Snapshot }) {
   const [selected, setSelected] = useState<Customer | null>(null);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const filteredCustomers = snapshot.customers.filter((customer) => {
+    if (activeFilter === "At Risk") return customer.openIssues > 0 || customer.sentiment === "negative" || customer.sentiment === "frustrated";
+    if (activeFilter === "Leads") return customer.status.toLowerCase().includes("lead") || customer.value > 0;
+    if (activeFilter === "Corporate") return /corporate|studio|company/i.test(`${customer.segment} ${customer.latestIntent}`);
+    if (activeFilter === "Negative") return customer.sentiment === "negative" || customer.sentiment === "frustrated";
+    if (activeFilter === "Unassigned") return /unassigned/i.test(customer.owner);
+    return true;
+  });
   return (
     <section className="page">
       <PageHeader title="Customers" subtitle="Operational memory built from Telegram history." />
-      <FilterTabs labels={["All", "At Risk", "Leads", "Corporate", "Negative", "Unassigned"]} />
+      <FilterTabs labels={["All", "At Risk", "Leads", "Corporate", "Negative", "Unassigned"]} value={activeFilter} onChange={setActiveFilter} />
       <DataTable headers={["Customer", "Telegram", "Status", "Segment", "Sentiment", "Latest Intent", "Value", "Open Issues", "Owner"]}>
-        {snapshot.customers.map((customer) => (
+        {filteredCustomers.map((customer) => (
           <tr key={customer.id} data-testid="customer-row" onClick={() => setSelected(customer)} tabIndex={0}>
             <td>{customer.name}</td>
             <td>{customer.telegramHandle ?? "Telegram linked"}</td>
@@ -269,6 +343,7 @@ function CustomersPage({ snapshot }: { snapshot: Snapshot }) {
           </tr>
         ))}
       </DataTable>
+      {filteredCustomers.length === 0 && <p className="muted empty-state">No customers match this filter.</p>}
       {selected && (
         <Drawer title={selected.name} onClose={() => setSelected(null)}>
           <div className="tabs"><span>Overview</span><span>Conversations</span><span>Tasks</span><span>Timeline</span><span>Insights</span></div>
@@ -280,7 +355,11 @@ function CustomersPage({ snapshot }: { snapshot: Snapshot }) {
   );
 }
 
-function PipelinePage({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => Promise<void> }) {
+function PipelinePage({ snapshot, refresh, notify }: { snapshot: Snapshot; refresh: () => Promise<void>; notify: (message: string) => void }) {
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
+  const selectedOpportunity = snapshot.opportunities.find((opportunity) => opportunity.id === selectedOpportunityId) ?? null;
+  const selectedCustomer = selectedOpportunity ? customerFor(snapshot, selectedOpportunity.customerId) : undefined;
+
   return (
     <section className="page">
       <PageHeader title="Pipeline" subtitle="Telegram leads moving through operational stages." />
@@ -290,11 +369,35 @@ function PipelinePage({ snapshot, refresh }: { snapshot: Snapshot; refresh: () =
           <section key={stage} className="kanban-column">
             <h2>{stage}</h2>
             {snapshot.opportunities.filter((opportunity) => opportunity.stage === stage).map((opportunity) => (
-              <LeadCard key={opportunity.id} opportunity={opportunity} snapshot={snapshot} onAdvance={async () => { await updateOpportunityStage(opportunity.id, "Negotiation"); await refresh(); }} />
+              <LeadCard key={opportunity.id} opportunity={opportunity} snapshot={snapshot} onOpen={() => setSelectedOpportunityId(opportunity.id)} />
             ))}
           </section>
         ))}
       </div>
+      {selectedOpportunity && (
+        <Drawer title="Lead Detail" onClose={() => setSelectedOpportunityId(null)}>
+          <Field label="Lead Id" value={selectedOpportunity.id} />
+          <Field label="Customer" value={selectedCustomer?.name} />
+          <Field label="Stage" value={selectedOpportunity.stage} />
+          <Field label="Value" value={money(selectedOpportunity.value)} />
+          <Field label="Intent" value={selectedOpportunity.intent} />
+          <Field label="Next Action" value={selectedOpportunity.nextAction} />
+          <Field label="Risk" value={selectedOpportunity.risk} />
+          <Field label="Source" value={selectedOpportunity.source} />
+          <div className="button-row">
+            <button
+              disabled={selectedOpportunity.stage === "Negotiation"}
+              onClick={async () => {
+                await updateOpportunityStage(selectedOpportunity.id, "Negotiation");
+                await refresh();
+                notify("Lead moved to Negotiation.");
+              }}
+            >
+              Move to Negotiation
+            </button>
+          </div>
+        </Drawer>
+      )}
     </section>
   );
 }
@@ -382,16 +485,16 @@ function GraphPage({ snapshot }: { snapshot: Snapshot }) {
   );
 }
 
-function SettingsPage({ snapshot, refresh }: { snapshot: Snapshot; refresh: () => Promise<void> }) {
+function SettingsPage({ snapshot, refresh, notify }: { snapshot: Snapshot; refresh: () => Promise<void>; notify: (message: string) => void }) {
   return (
     <section className="page">
       <PageHeader title="Settings and Verification" subtitle="Real API status, setup guidance, and demo controls." />
       <div className="settings-grid">
-        <Panel title="OpenAI API Status"><StatusDetail status={snapshot.openaiStatus.status} configured={snapshot.openaiStatus.configured} /><p>Model: {snapshot.openaiStatus.model ?? "gpt-4.1-mini"}</p><button>Verify OpenAI</button></Panel>
-        <Panel title="Telegram Bot Status"><StatusDetail status={snapshot.telegramStatus.status} configured={snapshot.telegramStatus.configured} /><p>Bot: {snapshot.telegramStatus.botUsername ? `@${snapshot.telegramStatus.botUsername}` : "not verified"}</p><button>Verify Telegram</button></Panel>
-        <Panel title="Dashboard/Database Status"><p>JSON persistence is active. Snapshot updates every 2 seconds.</p><button onClick={async () => { await seedDemoData(); await refresh(); }}>Seed Demo Data</button></Panel>
-        <Panel title="Design QA Status"><p>Design QA uses `DESIGN.md`, impeccable preflight, and browser screenshots.</p><button>Run Real API Checks</button></Panel>
-        <Panel title="Setup Instructions" className="wide"><p>Set `OPENAI_API_KEY` and `TELEGRAM_BOT_TOKEN` in `.env.local`, then run `RUN_ALL.bat` to start the frontend, API, and Telegram bot worker.</p><button onClick={async () => { await injectDemo(); await refresh(); }}>Inject Demo Message</button></Panel>
+        <Panel title="OpenAI API Status"><StatusDetail status={snapshot.openaiStatus.status} configured={snapshot.openaiStatus.configured} /><p>Model: {snapshot.openaiStatus.model ?? "gpt-4.1-mini"}</p><button onClick={async () => { notify("OpenAI verification started..."); await verifyOpenAI().catch(() => undefined); await refresh(); notify("OpenAI verification finished. Check the status panel and console."); }}>Verify OpenAI</button></Panel>
+        <Panel title="Telegram Bot Status"><StatusDetail status={snapshot.telegramStatus.status} configured={snapshot.telegramStatus.configured} /><p>Bot: {snapshot.telegramStatus.botUsername ? `@${snapshot.telegramStatus.botUsername}` : "not verified"}</p><button onClick={async () => { notify("Telegram verification started..."); await verifyTelegram().catch(() => undefined); await refresh(); notify("Telegram verification finished. Check the status panel and console."); }}>Verify Telegram</button></Panel>
+        <Panel title="Dashboard/Database Status"><p>JSON persistence is active. Snapshot updates every 2 seconds.</p><button onClick={async () => { notify("Resetting seeded demo data..."); await seedDemoData(); await refresh(); notify("Seed demo data restored."); }}>Seed Demo Data</button></Panel>
+        <Panel title="Design QA Status"><p>Design QA uses `DESIGN.md`, impeccable preflight, and browser screenshots.</p><button onClick={async () => { notify("Real API checks started..."); await verifyRealApis(); await refresh(); notify("Real API checks finished. Review the verification console."); }}>Run Real API Checks</button></Panel>
+        <Panel title="Setup Instructions" className="wide"><p>Set `OPENAI_API_KEY` and `TELEGRAM_BOT_TOKEN` in `.env.local`, then run `RUN_ALL.bat` to start the frontend, API, and Telegram bot worker.</p><button onClick={async () => { notify("Injecting demo message..."); await injectDemo(); await refresh(); notify("Demo message injected through the shared processing pipeline."); }}>Inject Demo Message</button></Panel>
         <Panel title="Verification Console" className="wide">{snapshot.verificationLog.slice(0, 8).map((line) => <code key={line}>{line}</code>)}</Panel>
       </div>
     </section>
@@ -430,8 +533,26 @@ function Field({ label, value }: { label: string; value?: React.ReactNode }) {
   return <div className="field"><span>{label}</span><strong>{value || "Pending"}</strong></div>;
 }
 
-function FilterTabs({ labels }: { labels: string[] }) {
-  return <div className="filter-tabs">{labels.map((label, index) => <button className={index === 0 ? "active" : ""} key={label}>{label}</button>)}</div>;
+function FilterTabs({ labels, value, onChange }: { labels: string[]; value?: string; onChange?: (label: string) => void }) {
+  const [localValue, setLocalValue] = useState(labels[0]);
+  const activeValue = value ?? localValue;
+  return (
+    <div className="filter-tabs">
+      {labels.map((label) => (
+        <button
+          aria-pressed={activeValue === label}
+          className={activeValue === label ? "active" : ""}
+          key={label}
+          onClick={() => {
+            setLocalValue(label);
+            onChange?.(label);
+          }}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function Drawer({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
@@ -442,9 +563,9 @@ function InsightRow({ insight }: { insight: Insight }) {
   return <div className="insight-row"><Badge tone={insight.severity}>{insight.severity}</Badge><div><strong>{insight.title}</strong><span>{insight.count} cases, trend {insight.trend}</span></div></div>;
 }
 
-function LeadCard({ opportunity, snapshot, onAdvance }: { opportunity: Opportunity; snapshot: Snapshot; onAdvance: () => Promise<void> }) {
+function LeadCard({ opportunity, snapshot, onOpen }: { opportunity: Opportunity; snapshot: Snapshot; onOpen: () => void }) {
   const customer = customerFor(snapshot, opportunity.customerId);
-  return <article className="lead-card"><strong>{customer?.name}</strong><span>{opportunity.intent}</span><span>Value {money(opportunity.value)}</span><span>Sentiment {opportunity.sentiment}</span><span>Next action: {opportunity.nextAction}</span><span>Risk: {opportunity.risk}</span><span>Source: {opportunity.source}</span><button onClick={onAdvance}>Open lead detail</button></article>;
+  return <article className="lead-card" data-testid={`lead-card-${opportunity.id}`}><strong>{customer?.name}</strong><span>{opportunity.intent}</span><span>Value {money(opportunity.value)}</span><span>Sentiment {opportunity.sentiment}</span><span>Next action: {opportunity.nextAction}</span><span>Risk: {opportunity.risk}</span><span>Source: {opportunity.source}</span><button onClick={onOpen}>Open Lead Detail</button></article>;
 }
 
 function ActivityStream({ snapshot }: { snapshot: Snapshot }) {

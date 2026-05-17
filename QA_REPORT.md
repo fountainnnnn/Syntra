@@ -27,7 +27,7 @@ Syntra now has a Vite React frontend, separate Express TypeScript API, Telegram 
 | `npm run design:lint` | PASS | `DESIGN.md` lint completed. |
 | `npm run design:spec` | PASS | Design spec command completed. |
 | `npm run design:export` | PASS | Design export command completed. |
-| `npm run test:e2e` | PASS | 36/36 Playwright tests passed across desktop, tablet, and mobile. |
+| `npm run test:e2e` | PASS | 48/48 Playwright tests passed across desktop, tablet, and mobile after the interaction-polish pass. |
 
 ## Real API Evidence
 
@@ -67,6 +67,9 @@ Verified flows:
 - Operations graph node inspector
 - Settings panels and demo controls
 - Demo injection reflected on dashboard and inbox
+- Pipeline lead detail opens without mutating stage; explicit stage movement is tested separately
+- Bounded scrolling for long pipeline/card regions
+- Dashboard, inbox, settings, filters, and task status controls give visible feedback or mutate state
 - Console-error checks for severe browser errors
 
 Screenshot output: `artifacts/screenshots/`.
@@ -86,8 +89,31 @@ Playwright report output:
 - Relaxed the live OpenAI verifier away from exact model wording while still requiring real structured extraction.
 - Fixed `verify:real-apis` process spawning on Windows.
 - Allowed both `localhost:5173` and `127.0.0.1:5173` origins for local browser tests.
+- Repaired the Pipeline `Open Lead Detail` interaction so it opens a detail drawer instead of moving the lead to another column.
+- Added explicit `Move to Negotiation` behavior in the lead detail drawer.
+- Added bounded overflow scrolling to the app shell, pages, kanban, columns, tables, activity streams, settings panels, and inbox panes.
+- Wired formerly inert dashboard, inbox, settings, filter, and task status controls to feedback or state changes.
+- Added `tests/e2e/interaction-polish.spec.ts` for the pipeline regression, scroll bounds, button feedback, filters, and task status controls.
 
 ## Remaining Risk
 
 - The current production bundle has a large JavaScript chunk because the hackathon dashboard is built as one SPA with Recharts. It is acceptable for the local demo, but code-splitting would be a good post-hackathon optimization.
 - Live Telegram inbound message evidence depends on a human sending a message while the bot worker is running. The bot token and Bot API verification are real; Playwright uses deterministic demo injection for repeatability.
+
+## Endpoint Sweep - 2026-05-17T06:32:25.621Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T06:36:40.636Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T06:36:42.089Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T06:36:42.140Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)

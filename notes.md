@@ -1,5 +1,16 @@
 # Syntra Notes
 
+## Interaction Polish - 2026-05-17
+
+- User reported the previous goal was not finished nicely enough and that Pipeline `Open Lead Detail` made some leads disappear.
+- Root cause: `Open lead detail` was wired to `updateOpportunityStage(..., "Negotiation")`, so opening a card moved it out of its current stage column.
+- Fixed Pipeline by opening a `Lead Detail` drawer without mutating state, then adding an explicit `Move to Negotiation` action inside the drawer.
+- Added stateful/visible behavior for previously silent controls: dashboard queue/follow-up actions, inbox reply/edit/send/create/escalate/resolve actions, settings verification buttons, filter tabs, and task status toggles.
+- Added backend/API support for creating tasks, updating conversation status, and running OpenAI/Telegram verification from the Settings page.
+- Added internal overflow scrolling to long workbench regions so pages and columns stay bounded: app shell, page body, kanban board, kanban columns, tables, inbox panes, message list, activity stream, settings panels, and insights panels.
+- Added `tests/e2e/interaction-polish.spec.ts` covering pipeline detail non-mutation, explicit stage movement, scroll bounds, button feedback, filters, and task status changes.
+- Verification passed: `npm run lint`, `npm run build`, `npm run test`, `npm run sweep:endpoints`, `npm run verify:real-apis`, `npm run design:lint`, and `npm run test:e2e` with 48/48 Playwright tests across desktop, tablet, and mobile.
+
 ## Verified Demo Build - 2026-05-17
 
 - `RUN_ALL.bat` now clearly starts the Vite frontend, Express API, and Telegram bot worker through `npm run dev:all`.
@@ -112,3 +123,21 @@
 - GET /api/telegram/status: PASS (200)
 - GET /api/system/status: PASS (200)
 - POST /api/demo/inject: PASS (201)
+
+## Endpoint Sweep - 2026-05-17T06:32:25.622Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T06:36:40.636Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T06:36:42.089Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T06:36:42.141Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)

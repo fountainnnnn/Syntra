@@ -28,6 +28,35 @@ test.describe("Syntra workflow clarity", () => {
     await expect(page.getByText(/what happens next/i)).toBeVisible();
   });
 
+  test("pipeline stages stay in one readable rail without card overflow", async ({ page }) => {
+    await page.goto("/pipeline");
+
+    const rail = await page.locator(".kanban").evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        width: rect.width,
+      };
+    });
+    expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
+
+    const stageTops = await page.locator(".kanban-column").evaluateAll((elements) =>
+      elements.map((element) => Math.round(element.getBoundingClientRect().top)),
+    );
+    expect(new Set(stageTops).size).toBe(1);
+
+    const buttonContainment = await page.locator(".lead-card").evaluateAll((cards) =>
+      cards.map((card) => {
+        const cardRect = card.getBoundingClientRect();
+        const button = card.querySelector("button");
+        const buttonRect = button?.getBoundingClientRect();
+        return Boolean(buttonRect && buttonRect.left >= cardRect.left && buttonRect.right <= cardRect.right);
+      }),
+    );
+    expect(buttonContainment.every(Boolean)).toBeTruthy();
+  });
+
   test("operations graph reads as a message-to-workflow map", async ({ page }) => {
     await page.goto("/graph");
 

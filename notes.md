@@ -175,3 +175,31 @@
 ## Real API Verification - 2026-05-17T07:18:32.829Z
 - OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
 - Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Endpoint Sweep - 2026-05-17T07:38:45.760Z
+- GET /api/health: PASS (200)
+- GET /api/snapshot: PASS (200)
+- GET /api/conversations: PASS (200)
+- GET /api/telegram/status: PASS (200)
+- GET /api/system/status: PASS (200)
+- POST /api/demo/inject: PASS (201)
+
+## OpenAI Verification - 2026-05-17T07:38:47.620Z
+- OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+
+## Telegram Verification - 2026-05-17T07:38:49.893Z
+- Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Real API Verification - 2026-05-17T07:38:50.046Z
+- OpenAI: OpenAI: verified_real_api (model=gpt-4o, extraction=real)
+- Telegram: Telegram: verified_real_api (bot=@FountainCRMBot, id=8739729891)
+
+## Apple-Style Visual Refinement - 2026-05-17
+- Used the `impeccable` context loader plus the loaded `layout` and `polish` command references. The `npx impeccable layout pipeline operations map` command only returned access warnings, so implementation followed the local command references directly.
+- Reworked Pipeline spacing so stages sit in one horizontal rail instead of wrapping into a wall of columns.
+- Restyled lead cards with a clearer hierarchy: customer and stage at the top, value/sentiment as a compact metric row, then separated reason, action, risk, and source sections.
+- Added restrained frosted Apple-style surfaces to the guide, bottleneck panel, stage lanes, lead cards, and Operations Map without changing the light app shell.
+- Tightened Operations Map layout so the graph canvas no longer stretches against the inspector and workflow cards no longer clip at desktop widths.
+- Desktop/tablet are the target surfaces for the demo. Existing mobile safeguards remain in place for regression coverage, but phone-specific optimization is not a priority.
+- Added a Playwright rail regression that checks horizontal board scrolling, single-row stage positioning, and lead-card button containment.
+- Verification passed: `npm run build`, `npm run lint`, `npm run test`, `npm run seed`, `npm run design:lint`, `npm run design:spec`, `npm run design:export`, `npm run test:e2e` (57/57), `npm run sweep:endpoints`, and `npm run verify:real-apis`.

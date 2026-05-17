@@ -730,14 +730,21 @@ function LeadCard({ opportunity, snapshot, onOpen }: { opportunity: Opportunity;
   const conversation = conversationFor(snapshot, opportunity.conversationId);
   return (
     <article className="lead-card" data-testid={`lead-card-${opportunity.id}`}>
-      <strong>{customer?.name}</strong>
-      <span>{opportunity.intent}</span>
-      <span><b>Why it is here</b>{stageGuidance[opportunity.stage].purpose}</span>
-      <span>Value {money(opportunity.value)}</span>
-      <span>Sentiment {opportunity.sentiment}</span>
-      <span><b>Next owner action</b>{opportunity.nextAction}</span>
-      <span>Risk: {opportunity.risk}</span>
-      <span><b>Source conversation</b>{conversation?.title ?? opportunity.source}</span>
+      <div className="lead-card-top">
+        <div>
+          <strong>{customer?.name}</strong>
+          <span>{opportunity.intent}</span>
+        </div>
+        <span className="lead-stage-pill">{opportunity.stage}</span>
+      </div>
+      <div className="lead-card-stats">
+        <span><b>Value</b>{money(opportunity.value)}</span>
+        <span><b>Sentiment</b>{opportunity.sentiment}</span>
+      </div>
+      <span className="lead-card-section"><b>Why it is here</b>{stageGuidance[opportunity.stage].purpose}</span>
+      <span className="lead-card-section"><b>Next owner action</b>{opportunity.nextAction}</span>
+      <span className="lead-card-section"><b>Risk</b>{opportunity.risk}</span>
+      <span className="lead-card-section"><b>Source conversation</b>{conversation?.title ?? opportunity.source}</span>
       <button onClick={onOpen}>Open Lead Detail</button>
     </article>
   );

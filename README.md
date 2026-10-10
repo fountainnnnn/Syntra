@@ -1,16 +1,33 @@
 # Syntra
 
-Syntra is a local customer operations dashboard for Telegram-first service teams. It turns inbound customer messages into structured operational work: customer memory, inbox triage, tasks, buying-intent pipeline stages, revenue risk, and an operations map that keeps every AI conclusion tied back to source evidence.
+**Built for the Ralphton hackathon, where the challenge was to one-shot an app:** write a single spec, hand it to an autonomous coding agent, and let it build a demo-ready product with no follow-up instructions.
 
-The app is built for a hackathon demo, but it is wired like a real product slice:
+Syntra is the result: a customer operations dashboard for Telegram-first service teams. It turns inbound customer messages into structured work (customer memory, inbox triage, tasks, a buying-intent pipeline, revenue risk) and an operations map that ties every AI conclusion back to the message it came from.
 
-- Vite, React, TypeScript, and React Router on the frontend.
-- A separate Express TypeScript API.
-- Telegram ingestion through a bot worker or webhook endpoint.
-- OpenAI structured extraction when a real key is configured.
-- Deterministic fallback extraction when secrets are missing, so the demo still runs.
-- JSON persistence under `data/` for local state.
-- Google Design.MD, Playwright, Vitest, ESLint, and endpoint sweeps for verification.
+## How it was built
+
+The deliverable was the spec as much as the app. My job was to write a prompt precise enough that one autonomous run would produce something a judge could actually use.
+
+1. **One spec.** [`goal prompt.md`](goal%20prompt.md) is the complete `/goal` prompt given to Codex, about 90 KB. It defines the product, every screen, the data model, the Telegram and OpenAI integrations, the design system, and, most importantly, the verification gates the agent had to pass before it was allowed to call itself done.
+2. **One run.** The agent built the whole stack in a single autonomous session (the "Build verified Syntra demo app" commit), followed by a few UI refinement commits the same day.
+3. **Verified, not just generated.** The spec required proof, not claims: a production build, lint, unit tests, an endpoint sweep, real OpenAI and Telegram checks, and Playwright runs on desktop, tablet and mobile. The final run passed **57/57 end-to-end tests** and 4 unit tests. [`QA_REPORT.md`](QA_REPORT.md) records the history.
+
+Design decisions in the spec that held up:
+
+- **Works without secrets.** With no OpenAI key, extraction falls back to deterministic local rules, and the UI labels which mode is active. The demo never breaks in front of judges.
+- **One pipeline.** Demo injection goes through the same processing path as real Telegram messages, so the fallback demo and the live demo exercise the same backend code.
+- **No surprise messages to customers.** The bot only ingests. Replies go out only when an operator clicks send with explicit text.
+
+Syntra later grew into my current project, Reyolk, which handles the same problem across more channels.
+
+## Stack
+
+- Vite, React, TypeScript and React Router on the frontend
+- A separate Express TypeScript API
+- Telegram ingestion through a polling bot worker or a webhook endpoint
+- OpenAI structured extraction, with a deterministic fallback
+- JSON persistence under `data/`
+- Playwright, Vitest, ESLint, endpoint sweeps and Google Design.MD for verification
 
 ## What Syntra Does
 
@@ -24,14 +41,6 @@ Syntra listens for customer-service style Telegram messages and converts them in
 - **Insights**: recurring issue clusters, sentiment trend, response delay, revenue risk, and recommendations.
 - **Operations Graph**: a left-to-right map from Telegram message to AI extraction, customer record, task, pipeline impact, and owner action.
 - **Settings**: real API status, demo controls, verification console, and setup guidance.
-
-## Important Behavior
-
-Telegram is treated as a customer-service channel. The bot worker ingests customer messages only; it does not send automatic acknowledgement messages to customers. Outbound Telegram replies are sent only when an operator uses the dashboard reply action and provides explicit reply text.
-
-OpenAI is used for message extraction and verification when `OPENAI_API_KEY` is configured. If the key is missing or placeholder-only, Syntra falls back to deterministic local extraction and labels the API status accordingly.
-
-Demo injection uses the same processing pipeline as Telegram ingestion, so fallback demos and live Telegram demos exercise the same backend flow.
 
 ## Requirements
 
@@ -228,7 +237,8 @@ DESIGN.md             Google Design.MD system contract
 PRODUCT.md            Product brief for Syntra
 DEMO_README.md        Hackathon runbook
 QA_REPORT.md          Verification history
-plan.md / notes.md    Working project plan and implementation notes
+goal prompt.md        The one-shot spec given to the agent
+plan.md / notes.md    The agent's working plan and implementation notes
 RUN_ALL.bat           Windows launcher for the full local stack
 ```
 
